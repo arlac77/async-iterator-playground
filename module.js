@@ -1,23 +1,29 @@
 async function worker() {
-  const init = initializeModel();
+  const model = initializeModel();
 
-  for await (const s of init.a) {
-    console.log(s);
+  for await (const m of model.master()) {
+    console.log(m);
+  }
+
+  //console.log(model.details);
+  for await (const d of model.details[0]) {
+    console.log(d);
   }
 }
 
 worker();
 
+function initializeModel() {
+  const details = [];
 
-function initializeModel()
-{
-  const a = sequence("a");
-  const b = sequence("b");
+  async function* master() {
+    for await (const m of sequence("M")) {
+      details.push(sequence(`${m}D`));
+      yield m;
+    }
+  }
 
-  return {
-    a,
-    b
-  };
+  return { master, details };
 }
 
 async function* sequence(name, time = 100, num = 10, errIndex = -1) {
