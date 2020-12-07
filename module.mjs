@@ -3,19 +3,27 @@ import { aggregateFifo } from "aggregate-async-iterator";
 async function worker() {
   const model = initializeModel();
 
-  for await (const m of model.master) {
-    console.log(m);
+  async function processMaster(model) {
+    for await (const m of model.master) {
+      console.log(m);
+    }
   }
 
-  for await (const d of model.details) {
-    console.log(d);
+  async function processDetails(model) {
+    for await (const d of model.details) {
+      console.log(d);
+    }
   }
+
+  await processMaster(model);
+  processDetails(model);
 }
 
 worker();
 
 function initializeModel() {
-  const details = [];
+
+  const details = [empty()];
 
   async function* master() {
     for await (const m of sequence("M")) {
@@ -25,6 +33,9 @@ function initializeModel() {
   }
 
   return { master: master(), details: aggregateFifo(details) };
+}
+
+async function* empty() {
 }
 
 async function* sequence(name, time = 100, num = 10, errIndex = -1) {
