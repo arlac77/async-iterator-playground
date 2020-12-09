@@ -15,24 +15,31 @@ async function worker() {
     }
   }
 
-  await processMaster(model);
-  processDetails(model);
+  await Promise.all([processMaster(model), processDetails(model)]);
+ //await Promise.all([processDetails(model)]);
+ //await Promise.all([processMaster(model)]);
 }
 
 worker();
 
 function initializeModel() {
-
   const masters = new Set();
 
-  const details = [empty()];
+  let startDetails;
+
+  const details = [
+    emptyWaitIterator(new Promise(resolve => (startDetails = resolve)))
+  ];
 
   async function* master() {
-    for(const m of masters) { yield m; }
+    for (const m of masters) {
+      yield m;
+    }
 
     for await (const m of sequence("M")) {
+      startDetails();
       masters.add(m);
-      details.push(sequence(`${m}D`));
+      details.push(sequence(`${m}D`, 50));
       yield m;
     }
   }
@@ -40,13 +47,23 @@ function initializeModel() {
   return {
     masters,
     master: master(),
-    details: aggregateFifo(details) };
+    details: aggregateFifo(details)
+  };
 }
 
-async function* empty() {
+function emptyWaitIterator(start) {
+  return {
+    async next() {
+      console.log("await start");
+      await start;
+      console.log("start details");
+
+      return { done: true };
+    }
+  };
 }
 
-async function* sequence(name, time = 100, num = 10, errIndex = -1) {
+async function* sequence(name, time = 100, num = 5, errIndex = -1) {
   for (let i = 0; i < num; i += 1) {
     yield new Promise((resolve, reject) =>
       setTimeout(() => {
