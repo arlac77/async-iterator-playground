@@ -23,16 +23,24 @@ worker();
 
 function initializeModel() {
 
+  const masters = new Set();
+
   const details = [empty()];
 
   async function* master() {
+    for(const m of masters) { yield m; }
+
     for await (const m of sequence("M")) {
+      masters.add(m);
       details.push(sequence(`${m}D`));
       yield m;
     }
   }
 
-  return { master: master(), details: aggregateFifo(details) };
+  return {
+    masters,
+    master: master(),
+    details: aggregateFifo(details) };
 }
 
 async function* empty() {
