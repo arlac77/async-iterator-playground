@@ -16,8 +16,8 @@ async function worker() {
   }
 
   await Promise.all([processMaster(model), processDetails(model)]);
- //await Promise.all([processDetails(model)]);
- //await Promise.all([processMaster(model)]);
+  //await Promise.all([processDetails(model)]);
+  //await Promise.all([processMaster(model)]);
 }
 
 worker();
@@ -74,5 +74,28 @@ async function* sequence(name, time = 100, num = 5, errIndex = -1) {
         }
       }, time)
     );
+  }
+}
+
+class Sequenzer {
+  constructor(name, time = 100, num = 5, errIndex = -1) {
+    this.name = name;
+    this.time = time;
+    this.num = num;
+    this.errIndex = errIndex;
+  }
+
+  async *[Symbol.asyncIterator]() {
+    for (let i = 0; i < this.num; i += 1) {
+      yield new Promise((resolve, reject) =>
+        setTimeout(() => {
+          if (i === this.errIndex) {
+            reject(this.name + i);
+          } else {
+            resolve(this.name + i);
+          }
+        }, this.time)
+      );
+    }
   }
 }
