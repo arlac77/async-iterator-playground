@@ -2,41 +2,35 @@ import { aggregateFifo } from "aggregate-async-iterator";
 import { sequence, wait } from "./util.mjs";
 
 function separator(sequence) {
+  let done = false;
+  let value;
 
-    let done = false;
+  let resolveB,
+    bPromise = new Promise(resolve => (resolveB = resolve));
 
-    let x;
-
-  const a = async function* () {
-      for await(x of sequence) {
-          const n = Number.parseInt(x[1]);
-          if(n % 2) {
-            yield x;
-            x= undefined;
-          }
-          else {
-
-          }
+  async function* a() {
+    for await (value of sequence) {
+      if (value[0] === "A") {
+        yield value;
+      } else {
+        resolveB({ value, done });
+        bPromise = new Promise(resolve => (resolveB = resolve));
       }
+    }
 
-      done = true;
-    },
+    done = true;
+  }
 
-    b = async function* () {
-        while(!done) {
-            if(x) {
-                yield x;
-                x = undefined;
-            }
-            await wait(100);
-        }
-    };
-
-  return [a(), b()];
+  return [
+    a(),
+    {
+      next: () => bPromise
+    }
+  ];
 }
 
 async function doit() {
-  const [a, b] = separator(sequence("X"));
+  const [a, b] = separator(aggregateFifo([sequence("A"), sequence("B")]));
 
   for await (const ai of aggregateFifo([a, b])) {
     console.log(ai);
