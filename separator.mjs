@@ -1,5 +1,5 @@
 import { aggregateFifo } from "aggregate-async-iterator";
-import { sequence, wait } from "./util.mjs";
+import { sequence } from "./util.mjs";
 
 function separator(sequence) {
   let done = false;
@@ -14,7 +14,9 @@ function separator(sequence) {
         yield value;
       } else {
         resolveB({ value, done });
-        bPromise = new Promise(resolve => (resolveB = resolve));
+        bPromise = new Promise(resolve => {
+          resolveB = resolve;
+        });
       }
     }
 
