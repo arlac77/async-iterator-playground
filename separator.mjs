@@ -5,8 +5,12 @@ function separator(sequence) {
   let done = false;
   let value;
 
-  let resolveB,
+  let resolveB, bPromise;
+
+  function queueB() {
     bPromise = new Promise(resolve => (resolveB = resolve));
+  }
+  queueB();
 
   async function* a() {
     for await (value of sequence) {
@@ -14,9 +18,7 @@ function separator(sequence) {
         yield value;
       } else {
         resolveB({ value, done });
-        bPromise = new Promise(resolve => {
-          resolveB = resolve;
-        });
+        queueB();
       }
     }
 
