@@ -32,7 +32,9 @@ function separator(sequence) {
 }
 
 async function doit() {
-  const [a, b] = separator(aggregateFifo([sequence("A"), sequence("B")]));
+  const [a, b] = separator(
+    aggregateFifo([sequence("A", 80), sequence("B", 40)])
+  );
 
   for await (const ai of aggregateFifo([a, b])) {
     console.log(ai);
