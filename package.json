@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "aggregate-async-iterator": "^1.1.9"
+    "aggregate-async-iterator": "^1.1.10"
   }
 }
